@@ -4,7 +4,7 @@ pipeline{
 //		label 'openinsurance-devops.ca-central-1.jenkinsci.slave'
 //	}
     environment {
-        SVC_ACCOUNT_KEY = credentials('anderson')
+        AWS Credentials('anderson')
     }
     stages {
  		stage('Install tools') {
