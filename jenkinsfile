@@ -57,7 +57,7 @@ pipeline {
 		}
 		stage('TF-Create-Codebuild'){
 		    steps{
-				dir("/var/lib/jenkins/workspacejenkins-tf-developer-associate/codebuild/"){
+				dir("/var/lib/jenkins/workspace/jenkins-tf-developer-associate/codebuild/"){
                     echo '--- create codebuild'
                     sh "terraform init"
                     sh "terraform apply --auto-approve"
@@ -90,7 +90,7 @@ pipeline {
 		}
 		stage('TF-Destroy-Codebuild'){
 		    steps{
-				dir("/var/lib/jenkins/workspacejenkins-tf-developer-associate/codebuild/"){
+				dir("/var/lib/jenkins/workspace/jenkins-tf-developer-associate/codebuild/"){
                     echo '--- destroy codebuild'
                     sh "terraform destroy --auto-approve"
 				}
