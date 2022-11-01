@@ -1,23 +1,14 @@
-pipeline{
+pipeline {
    agent any 
-
- //     environment {
- //         withAWS(credentials: 'anderson')
- // }
-           
     stages {
-
-		
 		stage('TF-Plan-Beanstalk'){
 		    steps{
-				withAWS(credentials: 'anderson') {
 				dir("/var/lib/jenkins/workspace/jenkins-tf-developer-associate/beanstalk/"){
                     echo '--- plan beanstalk'
 					sh 'ls'
 					sh 'pwd'
                     sh "terraform init"
                     sh "terraform plan"
-				}
 				}
  		    }
 		}
