@@ -1,8 +1,10 @@
 pipeline {
    agent any 
-       environment {
-        SVC_ACCOUNT_KEY = credentials('AndersonFerreira')
-    }
+
+//       environment {
+//        SVC_ACCOUNT_KEY = credentials('AndersonFerreira')
+//    }
+
     stages {
 		stage('TF-Plan-Beanstalk'){
 		    steps{
