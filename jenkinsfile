@@ -4,7 +4,7 @@ pipeline{
 //		label 'openinsurance-devops.ca-central-1.jenkinsci.slave'
 //	}
     environment {
-       credentials('anderson')
+       credentials: 'anderson'
     }
     stages {
  		stage('Install tools') {
