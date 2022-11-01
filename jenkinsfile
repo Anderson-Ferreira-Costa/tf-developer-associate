@@ -1,15 +1,9 @@
 pipeline{
    agent any 
-//{
-//		label 'openinsurance-devops.ca-central-1.jenkinsci.slave'
-//	}
-//    environment {
-//       withAWS(credentials: 'anderson')
-//    }
-    stages {
-		withAWS(credentials: 'anderson'){
+      environment {
 
-		}
+  }
+    stages {
  		stage('Install tools') {
  			steps {
                  dir("/var/lib/workspace/") { 
