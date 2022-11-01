@@ -73,5 +73,36 @@ pipeline {
 				}
 		    }
 		}
+		stage('Confirm Destroy?'){
+ 			steps{
+                 timeout(time: 2, unit: 'HOURS') {
+                     input 'Prosseguir com a Execução?'
+                 }
+ 		    }
+ 		}
+		stage('TF-Destroy-Beanstalk'){
+		    steps{
+				dir("/var/lib/jenkins/workspace/jenkins-tf-developer-associate/beanstalk/"){
+                    echo '--- destroy beanstalk'
+                    sh "terraform destroy --auto-approve"
+				}
+		    }
+		}
+		stage('TF-Destroy-Codebuild'){
+		    steps{
+				dir("/var/lib/jenkins/workspacejenkins-tf-developer-associate/codebuild/"){
+                    echo '--- destroy codebuild'
+                    sh "terraform destroy --auto-approve"
+				}
+		    }
+		}
+		stage('TF-Destroy-Codepipeline'){
+		    steps{
+				dir("/var/lib/jenkins/workspace/jenkins-tf-developer-associate/codepipeline/"){
+                    echo '--- destroy codepipeline'
+                    sh "terraform destroy --auto-approve"
+				}
+		    }
+		}
 	}
 }
