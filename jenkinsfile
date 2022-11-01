@@ -4,8 +4,10 @@ pipeline{
  //     environment {
  //         withAWS(credentials: 'anderson')
  // }
-           withAWS(credentials: 'anderson') {
+           
     stages {
+
+		withAWS(credentials: 'anderson') {
 		stage('TF-Plan-Beanstalk'){
 		    steps{
 				dir("/var/lib/jenkins/workspace/jenkins-tf-developer-associate/beanstalk/"){
@@ -73,6 +75,7 @@ pipeline{
 				}
 		    }
 		}
+		}
 	}
-	}
+
 }
