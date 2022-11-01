@@ -7,6 +7,7 @@ pipeline{
     stages {
  		stage('Install tools') {
  			steps {
+				 withAWS(credentials: 'anderson', region: 'us-east-1') {
                  dir("/var/lib/workspace/") { 
                     sh 'cat /etc/*release'
                     sh 'sudo yum update -y'
@@ -19,6 +20,7 @@ pipeline{
                     sh 'terraform -v'
 					sh 'ls'
                 }
+			}
 			}
 		}
 		stage('TF-Plan-Beanstalk'){
