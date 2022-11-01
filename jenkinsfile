@@ -2,9 +2,9 @@ pipeline{
    agent any 
 
  //     environment {
- //         withAWS(credentials: 'anderson', region: 'us-east-1')
- // teste
+ //         withAWS(credentials: 'anderson')
  // }
+           withAWS(credentials: 'anderson') {
     stages {
 		stage('TF-Plan-Beanstalk'){
 		    steps{
@@ -73,5 +73,6 @@ pipeline{
 				}
 		    }
 		}
+	}
 	}
 }
