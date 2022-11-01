@@ -65,6 +65,8 @@ resource "aws_codepipeline" "codepipeline" {
 
 resource "aws_s3_bucket" "codepipeline_bucket" {
   bucket = "codepipeline-webserver-bucket"
+  force_destroy = true
+
 }
 
 resource "aws_s3_bucket_acl" "codepipeline_bucket_acl" {
