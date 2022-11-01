@@ -3,6 +3,7 @@ pipeline{
 
  //     environment {
  //         withAWS(credentials: 'anderson', region: 'us-east-1')
+ // teste
  // }
     stages {
 		stage('TF-Plan-Beanstalk'){
