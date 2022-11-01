@@ -8,6 +8,8 @@ pipeline{
 //    }
     stages {
 		withAWS(credentials: 'anderson'){
+
+		}
  		stage('Install tools') {
  			steps {
                  dir("/var/lib/workspace/") { 
@@ -91,6 +93,5 @@ pipeline{
 				}
 		    }
 		}
-	  }
 	}
 }
