@@ -11,44 +11,18 @@ def addDescription(message) {
 }
 
 pipeline{
-    agent {
-		label 'openinsurance-devops.ca-central-1.jenkinsci.slave'
-	}
+   agent any 
+//{
+//		label 'openinsurance-devops.ca-central-1.jenkinsci.slave'
+//	}
     environment {
 
-        SVC_ACCOUNT_KEY = credentials('svc-jenkins-cicd.openinsurance-dev')
-    }
-    options {
-        skipDefaultCheckout()
+        SVC_ACCOUNT_KEY = credentials('anderson')
     }
     stages {
-		stage('Execucao manual?'){
-			when {
-				expression {env.gitlabTargetBranch == null}
-			}
-			steps{
-				script{
-					if(env.gitlabTargetBranch == null){
-						gitlabTargetBranch="master" // Simula a branch master
-						gitlabAfter="UNKNOW"
-						echo 'Detectada execucao do job por solicitacao manual'
-						wrap([$class: 'BuildUser']) {
-							gitlabUserName = BUILD_USER_ID.toUpperCase()
-						}
-					}
-				}
-			}
-		}
-		stage('Checkout'){
-            steps {
-				checkout scm
-				sh 'ls'
-				sh 'pwd'
-			}
-		}
  		stage('Install tools') {
  			steps {
-                 dir("/home/ec2-user/workspace/Open_Insurance/") { // /home/ec2-user/workspace/Open_Insurance/   /jenkins-slave/workspace/Open_Insurance/ 
+                 dir("/home/ec2-user/workspace/") { 
                     sh 'cat /etc/*release'
                     sh 'sudo yum update -y'
                     sh 'sudo yum upgrade -y'
@@ -58,24 +32,40 @@ pipeline{
                     sh 'sudo unzip terraform_1.1.2_linux_amd64.zip'
                     sh 'sudo mv terraform /usr/bin/'
                     sh 'terraform -v'
-                    sh 'sudo yum install -y yum-utils'
-                    sh 'wget https://github.com/gruntwork-io/terragrunt/releases/download/v0.35.14/terragrunt_linux_amd64'
-                    sh 'mv terragrunt_linux_amd64 terragrunt'
-                    sh 'chmod u+x terragrunt'
-                    sh 'sudo mv terragrunt /usr/bin/'
-                    sh 'terragrunt --version'
 					sh 'ls'
                 }
 			}
 		}
-		stage('TF-Plan'){
+		stage('TF-Plan-Beanstalk'){
 		    steps{
-				dir("/home/ec2-user/workspace/Open_Insurance/openinsurance-dev-bcp/terraform/dev/kubernetes/"){
-                    echo '--- plan eks cluster'
+				dir("/home/ec2-user/workspace/tf-developer-associate/beanstalk/"){
+                    echo '--- plan beanstalk'
 					sh 'ls'
 					sh 'pwd'
-                    sh "terragrunt init"
-                    sh "terragrunt plan"
+                    sh "terraform init"
+                    sh "terraform plan"
+				}
+ 		    }
+		}
+				stage('TF-Plan-Codebuild'){
+		    steps{
+				dir("/home/ec2-user/workspace/tf-developer-associate/codebuild/"){
+                    echo '--- plan codebuild'
+					sh 'ls'
+					sh 'pwd'
+                    sh "terraform init"
+                    sh "terraform plan"
+				}
+ 		    }
+		}
+				stage('TF-Plan'){
+		    steps{
+				dir("/home/ec2-user/workspace/tf-developer-associate/codepipeline/"){
+                    echo '--- plan codepipeline'
+					sh 'ls'
+					sh 'pwd'
+                    sh "terraform init"
+                    sh "terraform plan"
 				}
  		    }
 		}
@@ -86,84 +76,30 @@ pipeline{
                  }
  		    }
  		}		
-		stage('TF-Create-Network'){
+		stage('TF-Create-Beanstalk'){
 		    steps{
-				dir("/home/ec2-user/workspace/Open_Insurance/openinsurance-dev-bcp/terraform/dev/network/"){
-                    echo '--- create network'
+				dir("/home/ec2-user/workspace/tf-developer-associate/beanstalk/"){
+                    echo '--- create beanstalk'
+				    sh "terraform init"
+                    sh "terraform apply --auto-approve"
 				}
 		    }
 		}
 		stage('TF-Create-Codebuild'){
 		    steps{
-				dir("/home/ec2-user/workspace/Open_Insurance/openinsurance-dev-bcp/terraform/dev/codebuild-account/"){
+				dir("/home/ec2-user/workspacetf-developer-associate/codebuild/"){
                     echo '--- create codebuild'
+                    sh "terraform init"
+                    sh "terraform apply --auto-approve"
 				}
 		    }
 		}
-		stage('TF-Create-K8sCluster'){
+		stage('TF-Create-Codepipeline'){
 		    steps{
-				dir("/home/ec2-user/workspace/Open_Insurance/openinsurance-dev-bcp/terraform/dev/kubernetes/"){
-                    echo '--- create eks cluster'
-                    sh "terragrunt init"
-                    sh "terragrunt apply --auto-approve"
+				dir("/home/ec2-user/workspace/tf-developer-associate/codepipeline/"){
+                    echo '--- create codepipeline'
+                    sh "terraform init"
+                    sh "terraform apply --auto-approve"
 				}
 		    }
 		}
-		stage('TF-Create-CoreApps'){
-		    steps{
-				dir("/home/ec2-user/workspace/Open_Insurance/openinsurance-dev-bcp/terraform/dev/core-apps-eks/"){
-                    echo '--- create eks core-apps'
-                    sh "terragrunt init -reconfigure"
-				}
-		    }
-		}
-		stage('TF-Config-Kube'){
-		    steps{
-				dir("/home/ec2-user/workspace/Open_Insurance/openinsurance-dev-bcp/terraform/dev/kubernetes/"){
-                    echo '--- configure kubeconfig'
-                    sh "aws eks --region ca-central-1 update-kubeconfig --name OPENINSURANCE-EKS-DEV"
-				}
-		    }
-		}
-		stage('TF-Create-K8sNamespace'){
-		    steps{
-                echo '--- configure openinsurance namespace'
-                sh "kubectl get namespaces"
-		    }
-		}
-		stage('TF-Create-DNS'){
-		    steps{
-				dir("/home/ec2-user/workspace/Open_Insurance/openinsurance-dev-bcp/terraform/dev/dns/"){
-                    echo '--- create dns'
-                    sh "terragrunt init"
-                    sh "terragrunt apply --auto-approve"
-				}
-		    }
-		}
-		stage('TF-Verify-Deployments'){
-		    steps{
-                echo '--- verify deployments'
-                sh "kubectl get pods -A"
-                sh "kubectl get ingress -n openinsurance"
-                sh "kubectl get svc -n openinsurance"
-                sh "kubectl get pods -n openinsurance"
-            }
-		}
-    } 
-    post { 
-        always { 
-            script {
-                sh "kubectl describe configmap -n kube-system aws-auth"
-                sh "kubectl cluster-info"
-
-                sh "chmod +x kube.sh"
-                sh "sh kube.sh"
-
-				echo "Código de acesso ao dashboard k8s..."
-				sh "kubectl get secrets"
-				sh "kubectl -n kubernetes-dashboard describe secret \$(kubectl -n kubernetes-dashboard get secret | grep admin-user | awk '{print \$1}')"
-				echo "< fim >"
-            }
-        }
-    }
-}
