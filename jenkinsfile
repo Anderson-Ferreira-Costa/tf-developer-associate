@@ -4,6 +4,9 @@ pipeline{
  //     environment {
  //         withAWS(credentials: 'anderson', region: 'us-east-1')
  // }
+     options {
+        skipDefaultCheckout()
+    }
     stages {
  		stage('Install tools') {
  			steps {
