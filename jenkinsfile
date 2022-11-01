@@ -4,19 +4,18 @@ pipeline{
  //     environment {
  //         withAWS(credentials: 'anderson', region: 'us-east-1')
  // }
- 
     stages {
  		stage('Install tools') {
  			steps {
                  dir("/var/lib/jenkins/workspace/") { 
                     sh 'cat /etc/*release'
-                    sh 'yum update -y'
-                    sh 'yum upgrade -y'
-                    sh 'yum install wget unzip -y'
-                    sh 'rm -f terraform_1.1.2_linux_amd64.zip'
+    //                sh 'sudo yum update -y'
+    //                sh 'sudo yum upgrade -y'
+                    sh 'sudo yum install wget unzip -y'
+                    sh 'sudo rm -f terraform_1.1.2_linux_amd64.zip'
                     sh 'wget https://releases.hashicorp.com/terraform/1.1.2/terraform_1.1.2_linux_amd64.zip'
-                    sh 'unzip terraform_1.1.2_linux_amd64.zip'
-                    sh 'mv terraform /usr/bin/'
+                    sh 'sudo unzip terraform_1.1.2_linux_amd64.zip'
+                    sh 'sudo mv terraform /usr/bin/'
                     sh 'terraform -v'
 					sh 'ls'
                 }
