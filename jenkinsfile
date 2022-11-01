@@ -1,0 +1,169 @@
+def functionJobResult(message, type) {
+    currentBuild.result = type
+    addDescription(message)
+    if (type=='ERROR'){
+        error(message)
+    }
+}
+
+def addDescription(message) {
+    currentBuild.description = (currentBuild?.description ?: '') + '\n' + message
+}
+
+pipeline{
+    agent {
+		label 'openinsurance-devops.ca-central-1.jenkinsci.slave'
+	}
+    environment {
+
+        SVC_ACCOUNT_KEY = credentials('svc-jenkins-cicd.openinsurance-dev')
+    }
+    options {
+        skipDefaultCheckout()
+    }
+    stages {
+		stage('Execucao manual?'){
+			when {
+				expression {env.gitlabTargetBranch == null}
+			}
+			steps{
+				script{
+					if(env.gitlabTargetBranch == null){
+						gitlabTargetBranch="master" // Simula a branch master
+						gitlabAfter="UNKNOW"
+						echo 'Detectada execucao do job por solicitacao manual'
+						wrap([$class: 'BuildUser']) {
+							gitlabUserName = BUILD_USER_ID.toUpperCase()
+						}
+					}
+				}
+			}
+		}
+		stage('Checkout'){
+            steps {
+				checkout scm
+				sh 'ls'
+				sh 'pwd'
+			}
+		}
+ 		stage('Install tools') {
+ 			steps {
+                 dir("/home/ec2-user/workspace/Open_Insurance/") { // /home/ec2-user/workspace/Open_Insurance/   /jenkins-slave/workspace/Open_Insurance/ 
+                    sh 'cat /etc/*release'
+                    sh 'sudo yum update -y'
+                    sh 'sudo yum upgrade -y'
+                    sh 'sudo yum install wget unzip -y'
+                    sh 'sudo rm -f terraform_1.1.2_linux_amd64.zip'
+                    sh 'wget https://releases.hashicorp.com/terraform/1.1.2/terraform_1.1.2_linux_amd64.zip'
+                    sh 'sudo unzip terraform_1.1.2_linux_amd64.zip'
+                    sh 'sudo mv terraform /usr/bin/'
+                    sh 'terraform -v'
+                    sh 'sudo yum install -y yum-utils'
+                    sh 'wget https://github.com/gruntwork-io/terragrunt/releases/download/v0.35.14/terragrunt_linux_amd64'
+                    sh 'mv terragrunt_linux_amd64 terragrunt'
+                    sh 'chmod u+x terragrunt'
+                    sh 'sudo mv terragrunt /usr/bin/'
+                    sh 'terragrunt --version'
+					sh 'ls'
+                }
+			}
+		}
+		stage('TF-Plan'){
+		    steps{
+				dir("/home/ec2-user/workspace/Open_Insurance/openinsurance-dev-bcp/terraform/dev/kubernetes/"){
+                    echo '--- plan eks cluster'
+					sh 'ls'
+					sh 'pwd'
+                    sh "terragrunt init"
+                    sh "terragrunt plan"
+				}
+ 		    }
+		}
+ 		stage('Confirm Plan?'){
+ 		    steps{
+                 timeout(time: 2, unit: 'HOURS') {
+                     input 'Prosseguir com a Execução?'
+                 }
+ 		    }
+ 		}		
+		stage('TF-Create-Network'){
+		    steps{
+				dir("/home/ec2-user/workspace/Open_Insurance/openinsurance-dev-bcp/terraform/dev/network/"){
+                    echo '--- create network'
+				}
+		    }
+		}
+		stage('TF-Create-Codebuild'){
+		    steps{
+				dir("/home/ec2-user/workspace/Open_Insurance/openinsurance-dev-bcp/terraform/dev/codebuild-account/"){
+                    echo '--- create codebuild'
+				}
+		    }
+		}
+		stage('TF-Create-K8sCluster'){
+		    steps{
+				dir("/home/ec2-user/workspace/Open_Insurance/openinsurance-dev-bcp/terraform/dev/kubernetes/"){
+                    echo '--- create eks cluster'
+                    sh "terragrunt init"
+                    sh "terragrunt apply --auto-approve"
+				}
+		    }
+		}
+		stage('TF-Create-CoreApps'){
+		    steps{
+				dir("/home/ec2-user/workspace/Open_Insurance/openinsurance-dev-bcp/terraform/dev/core-apps-eks/"){
+                    echo '--- create eks core-apps'
+                    sh "terragrunt init -reconfigure"
+				}
+		    }
+		}
+		stage('TF-Config-Kube'){
+		    steps{
+				dir("/home/ec2-user/workspace/Open_Insurance/openinsurance-dev-bcp/terraform/dev/kubernetes/"){
+                    echo '--- configure kubeconfig'
+                    sh "aws eks --region ca-central-1 update-kubeconfig --name OPENINSURANCE-EKS-DEV"
+				}
+		    }
+		}
+		stage('TF-Create-K8sNamespace'){
+		    steps{
+                echo '--- configure openinsurance namespace'
+                sh "kubectl get namespaces"
+		    }
+		}
+		stage('TF-Create-DNS'){
+		    steps{
+				dir("/home/ec2-user/workspace/Open_Insurance/openinsurance-dev-bcp/terraform/dev/dns/"){
+                    echo '--- create dns'
+                    sh "terragrunt init"
+                    sh "terragrunt apply --auto-approve"
+				}
+		    }
+		}
+		stage('TF-Verify-Deployments'){
+		    steps{
+                echo '--- verify deployments'
+                sh "kubectl get pods -A"
+                sh "kubectl get ingress -n openinsurance"
+                sh "kubectl get svc -n openinsurance"
+                sh "kubectl get pods -n openinsurance"
+            }
+		}
+    } 
+    post { 
+        always { 
+            script {
+                sh "kubectl describe configmap -n kube-system aws-auth"
+                sh "kubectl cluster-info"
+
+                sh "chmod +x kube.sh"
+                sh "sh kube.sh"
+
+				echo "Código de acesso ao dashboard k8s..."
+				sh "kubectl get secrets"
+				sh "kubectl -n kubernetes-dashboard describe secret \$(kubectl -n kubernetes-dashboard get secret | grep admin-user | awk '{print \$1}')"
+				echo "< fim >"
+            }
+        }
+    }
+}
