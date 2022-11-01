@@ -1,9 +1,9 @@
 pipeline{
    agent any 
 
- //     environment {
- //         withAWS(credentials: 'anderson', region: 'us-east-1')
- // }
+    environment {
+        USER = 'root'
+ }
      options {
         skipDefaultCheckout()
     }
