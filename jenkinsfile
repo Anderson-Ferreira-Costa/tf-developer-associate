@@ -7,8 +7,7 @@ pipeline{
     stages {
  		stage('Install tools') {
  			steps {
-				 withAWS(credentials: 'anderson', region: 'us-east-1') {
-                 dir("/var/lib/workspace/") { 
+                 dir("/var/lib/jenkins/workspace/") { 
                     sh 'cat /etc/*release'
                     sh 'sudo yum update -y'
                     sh 'sudo yum upgrade -y'
@@ -21,11 +20,10 @@ pipeline{
 					sh 'ls'
                 }
 			}
-			}
 		}
 		stage('TF-Plan-Beanstalk'){
 		    steps{
-				dir("/var/lib/workspace/tf-developer-associate/beanstalk/"){
+				dir("/var/lib/jenkins/workspace/tf-developer-associate/beanstalk/"){
                     echo '--- plan beanstalk'
 					sh 'ls'
 					sh 'pwd'
@@ -36,7 +34,7 @@ pipeline{
 		}
 				stage('TF-Plan-Codebuild'){
 		    steps{
-				dir("/var/lib/workspace/tf-developer-associate/codebuild/"){
+				dir("/var/lib/jenkins/workspace/tf-developer-associate/codebuild/"){
                     echo '--- plan codebuild'
 					sh 'ls'
 					sh 'pwd'
@@ -47,7 +45,7 @@ pipeline{
 		}
 				stage('TF-Plan'){
 		    steps{
-				dir("/var/lib/workspace/tf-developer-associate/codepipeline/"){
+				dir("/var/lib/jenkins/workspace/tf-developer-associate/codepipeline/"){
                     echo '--- plan codepipeline'
 					sh 'ls'
 					sh 'pwd'
@@ -65,7 +63,7 @@ pipeline{
  		}		
 		stage('TF-Create-Beanstalk'){
 		    steps{
-				dir("/var/lib/workspace/tf-developer-associate/beanstalk/"){
+				dir("/var/lib/jenkins/workspace/tf-developer-associate/beanstalk/"){
                     echo '--- create beanstalk'
 				    sh "terraform init"
                     sh "terraform apply --auto-approve"
@@ -74,7 +72,7 @@ pipeline{
 		}
 		stage('TF-Create-Codebuild'){
 		    steps{
-				dir("/var/lib/workspacetf-developer-associate/codebuild/"){
+				dir("/var/lib/jenkins/workspacetf-developer-associate/codebuild/"){
                     echo '--- create codebuild'
                     sh "terraform init"
                     sh "terraform apply --auto-approve"
@@ -83,7 +81,7 @@ pipeline{
 		}
 		stage('TF-Create-Codepipeline'){
 		    steps{
-				dir("/var/lib/workspace/tf-developer-associate/codepipeline/"){
+				dir("/var/lib/jenkins/workspace/tf-developer-associate/codepipeline/"){
                     echo '--- create codepipeline'
                     sh "terraform init"
                     sh "terraform apply --auto-approve"
