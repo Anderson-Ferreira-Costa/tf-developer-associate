@@ -1,7 +1,7 @@
 terraform {
   backend "s3" {
     bucket  = "anderson-ferreira"
-    key     = "terraform-state/tf-developer-associate/terraform.tfstate"
+    key     = "terraform-state/beanstalk/terraform.tfstate"
     region  = "us-east-1"
     profile = "anderson"
   }
